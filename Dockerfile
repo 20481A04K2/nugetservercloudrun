@@ -1,9 +1,10 @@
+# Use ASP.NET 7.0 runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 
-# Install curl and unzip
+# Install necessary tools
 RUN apt-get update && apt-get install -y curl unzip
 
-# Download BaGet zip (v0.4.0-preview2 since others failed)
+# Download and extract BaGet
 RUN curl -L -o baget.zip https://github.com/loic-sharma/BaGet/releases/download/v0.4.0-preview2/BaGet.zip \
     && unzip baget.zip -d /app \
     && rm baget.zip
@@ -11,12 +12,12 @@ RUN curl -L -o baget.zip https://github.com/loic-sharma/BaGet/releases/download/
 # Set working directory
 WORKDIR /app
 
-# Create persistent directory for packages
-RUN mkdir /app/packages
+# Create packages directory for local storage
+RUN mkdir -p /app/packages
 
-# Expose default Cloud Run port
-ENV PORT=8080
+# Set environment variable for Cloud Run's expected port
+ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-# Set entrypoint with PORT binding
-ENTRYPOINT ["dotnet", "BaGet.dll", "--urls", "http://0.0.0.0:8080"]
+# Set entrypoint to run BaGet on Cloud Run's port
+ENTRYPOINT ["dotnet", "BaGet.dll"]
