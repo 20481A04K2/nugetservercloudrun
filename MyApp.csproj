@@ -9,7 +9,7 @@
     <!-- Optional but recommended for packaging -->
     <PackageId>MyDotNetWebApp</PackageId>
     <Version>1.0.0</Version>
-    <Authors>YourName</Authors>
+    <Authors>vamsi</Authors>
     <Description>My ASP.NET Core Web Application packaged as NuGet</Description>
     <PackageOutputPath>./nupkgs</PackageOutputPath>
   </PropertyGroup>
