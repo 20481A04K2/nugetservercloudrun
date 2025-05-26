@@ -4,9 +4,9 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
-
-    <!-- For packing -->
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>  <!-- Add this line -->
+    
+    <!-- Optional but recommended for packaging -->
     <PackageId>MyDotNetWebApp</PackageId>
     <Version>1.0.0</Version>
     <Authors>YourName</Authors>
@@ -15,4 +15,3 @@
   </PropertyGroup>
 
 </Project>
-
