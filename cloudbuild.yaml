@@ -1,23 +1,24 @@
 steps:
-  # Step 1: Restore, Publish and Package .NET App
+  # Step 1: Restore, Build and Pack the project (creates .nupkg in nupkgs/)
   - name: 'mcr.microsoft.com/dotnet/sdk:7.0'
-    id: 'Build & Package .NET App'
+    id: 'Build and Pack'
     entrypoint: bash
     args:
       - -c
       - |
         dotnet restore MyApp.csproj
-        dotnet publish MyApp.csproj -c Release -o publish
-        dotnet pack MyApp.csproj -o packages
+        dotnet build MyApp.csproj -c Release
+        dotnet pack MyApp.csproj -c Release -o nupkgs
+        ls -l nupkgs
 
-  # Step 2: Upload .nupkg to Cloud Storage
+  # Step 2: Upload the generated .nupkg file(s) to GCS bucket my-dotnet-packages
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'Upload .nupkg to GCS'
+    id: 'Upload NuGet Package to GCS'
+    entrypoint: bash
     args:
-      - bash
       - -c
       - |
-        gsutil cp packages/*.nupkg gs://my-dotnet-packages/
+        gsutil cp nupkgs/*.nupkg gs://my-dotnet-packages/
 
   # Step 3: Build Docker image
   - name: 'gcr.io/cloud-builders/docker'
