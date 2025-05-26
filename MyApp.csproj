@@ -1,9 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<PropertyGroup>
+  <TargetFramework>net7.0</TargetFramework>
+  <Nullable>enable</Nullable>
+  <OutputType>Exe</OutputType>
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-
-</Project>
+  <!-- Make project packable -->
+  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  <PackageId>MyDotNetWebApp</PackageId>
+  <Version>1.0.0</Version>
+  <Authors>YourName</Authors>
+  <Description>My ASP.NET Core Web Application packaged as NuGet</Description>
+  <PackageOutputPath>./nupkgs</PackageOutputPath>
+</PropertyGroup>
