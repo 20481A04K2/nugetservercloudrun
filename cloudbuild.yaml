@@ -1,0 +1,107 @@
+steps:
+  # Step 1: Install .NET SDK & publish app
+  - name: 'mcr.microsoft.com/dotnet/sdk:7.0'
+    id: 'Publish .NET App'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        mkdir -p output
+        dotnet publish MyApp.csproj -c Release -o output
+        apt-get update && apt-get install -y zip
+        zip -r dotnet_app.zip output
+
+  # Step 2: Create startup script to unzip and run the app
+  - name: 'ubuntu'
+    id: 'Generate startup script'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cat << 'EOF' > startup.sh
+        #!/bin/bash
+        set -e
+
+        # Install unzip, wget and apt-transport-https
+        sudo apt-get update
+        sudo apt-get install -y unzip wget apt-transport-https
+
+        # Add Microsoft package feed for dotnet runtime
+        wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+
+        # Install ASP.NET Core Runtime 7.0 (required for Microsoft.AspNetCore.App)
+        sudo apt-get install -y aspnetcore-runtime-7.0
+
+        # Unzip the published app
+        unzip /home/vij1542044/dotnet_app.zip -d /home/vij1542044/app
+
+        # Create systemd service for the app
+        cat <<EOL | sudo tee /etc/systemd/system/myapp.service
+        [Unit]
+        Description=My .NET App
+
+        [Service]
+        WorkingDirectory=/home/vij1542044/app
+        ExecStart=/usr/bin/dotnet /home/vij1542044/app/output/MyApp.dll
+        Restart=always
+        RestartSec=10
+        SyslogIdentifier=mydotnetapp
+        User=vij1542044
+
+        [Install]
+        WantedBy=multi-user.target
+        EOL
+
+        sudo systemctl daemon-reexec
+        sudo systemctl daemon-reload
+        sudo systemctl enable myapp.service
+        sudo systemctl start myapp.service
+        EOF
+
+        chmod +x startup.sh
+
+  # Step 3: Create a GCE VM with startup script placeholder
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Create VM'
+    args:
+      - compute
+      - instances
+      - create
+      - my-vm-instance
+      - --zone=asia-east1-b
+      - --machine-type=e2-micro
+      - --image-family=debian-11
+      - --image-project=debian-cloud
+      - --boot-disk-size=10GB
+      - --tags=http-server
+      - --scopes=https://www.googleapis.com/auth/cloud-platform
+      - --service-account=880653953247-compute@developer.gserviceaccount.com
+      - --project=onyx-antler-459216-j6
+
+  # Step 4: Copy ZIP and startup script to VM
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Copy files to VM'
+    args:
+      - compute
+      - scp
+      - dotnet_app.zip
+      - startup.sh
+      - vij1542044@my-vm-instance:/home/vij1542044
+      - --zone=asia-east1-b
+      - --project=onyx-antler-459216-j6
+
+  # Step 5: SSH into VM and run the startup script
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Run startup script on VM'
+    args:
+      - compute
+      - ssh
+      - vij1542044@my-vm-instance
+      - --zone=asia-east1-b
+      - --project=onyx-antler-459216-j6
+      - --command=bash /home/vij1542044/startup.sh
+
+options:
+  logging: CLOUD_LOGGING_ONLY
