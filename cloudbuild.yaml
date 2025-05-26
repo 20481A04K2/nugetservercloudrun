@@ -11,7 +11,7 @@ steps:
         dotnet pack MyApp.csproj -c Release -o nupkgs
         ls -l nupkgs
 
-  # Step 2: Upload the generated .nupkg file(s) to GCS bucket my-dotnet-packages
+  # Step 2: Upload the generated .nupkg file(s) to GCS bucket
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'Upload NuGet Package to GCS'
     entrypoint: bash
@@ -39,7 +39,7 @@ steps:
           echo "Artifact Registry repository dotnet-repo already exists, skipping creation."
         fi
 
-  # Step 4: Build BaGet Docker image
+  # Step 4: Build BaGet Docker image with filesystem storage
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Build BaGet Docker Image'
     args:
@@ -48,14 +48,14 @@ steps:
       - 'gcr.io/onyx-antler-459216-j6/baget:latest'
       - '.'
 
-  # Step 5: Push BaGet Docker image to Google Container Registry
+  # Step 5: Push BaGet Docker image
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Push BaGet Docker Image'
     args:
       - 'push'
       - 'gcr.io/onyx-antler-459216-j6/baget:latest'
 
-  # Step 6: Deploy BaGet to Cloud Run
+  # Step 6: Deploy BaGet to Cloud Run (with filesystem storage)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'Deploy BaGet to Cloud Run'
     entrypoint: 'gcloud'
@@ -66,12 +66,15 @@ steps:
       - '--image'
       - 'gcr.io/onyx-antler-459216-j6/baget:latest'
       - '--region'
-      - 'asia-south1'                       # Change to your region if needed
+      - 'asia-south1'
       - '--platform'
       - 'managed'
-      - '--allow-unauthenticated'          # Remove if you want authentication
+      - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'ASPNETCORE_ENVIRONMENT=Production,GCS_BUCKET=my-dotnet-packages,BAGET_API_KEY=my-strong-baget-api-key-123'
+      - 'ASPNETCORE_ENVIRONMENT=Production,BAGET__Storage__Type=FileSystem,BAGET__Storage__Path=/app/packages,BAGET_API_KEY=my-strong-baget-api-key-123'
+
+images:
+  - gcr.io/onyx-antler-459216-j6/baget:latest
 
 options:
   logging: CLOUD_LOGGING_ONLY
