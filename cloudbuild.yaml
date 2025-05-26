@@ -28,8 +28,8 @@ steps:
       - -c
       - |
         set -e
-        REPO_EXISTS=$(gcloud artifacts repositories list --location=asia-south1 --format="value(NAME)" --filter="NAME=dotnet-repo" || echo "")
-        if [ -z "$REPO_EXISTS" ]; then
+        REPO_EXISTS=$$(gcloud artifacts repositories list --location=asia-south1 --format="value(NAME)" --filter="NAME=dotnet-repo" || echo "")
+        if [ -z "$$REPO_EXISTS" ]; then
           echo "Creating Artifact Registry repository dotnet-repo"
           gcloud artifacts repositories create dotnet-repo \
             --repository-format=docker \
