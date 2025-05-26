@@ -39,41 +39,39 @@ steps:
           echo "Artifact Registry repository dotnet-repo already exists, skipping creation."
         fi
 
-  # Step 4: Build Docker image
+  # Step 4: Build BaGet Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'Build Docker Image'
+    id: 'Build BaGet Docker Image'
     args:
-      [
-        'build',
-        '-t',
-        'asia-south1-docker.pkg.dev/onyx-antler-459216-j6/dotnet-repo/myapp:latest',
-        '.'
-      ]
+      - 'build'
+      - '-t'
+      - 'gcr.io/onyx-antler-459216-j6/baget:latest'
+      - '.'
 
-  # Step 5: Push image to Artifact Registry
+  # Step 5: Push BaGet Docker image to Google Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'Push Docker Image'
+    id: 'Push BaGet Docker Image'
     args:
-      [
-        'push',
-        'asia-south1-docker.pkg.dev/onyx-antler-459216-j6/dotnet-repo/myapp:latest'
-      ]
+      - 'push'
+      - 'gcr.io/onyx-antler-459216-j6/baget:latest'
 
-  # Step 6: Deploy to Cloud Run with unauthenticated access
+  # Step 6: Deploy BaGet to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'Deploy to Cloud Run'
+    id: 'Deploy BaGet to Cloud Run'
+    entrypoint: 'gcloud'
     args:
-      [
-        'gcloud', 'run', 'deploy', 'dotnet-app',
-        '--image', 'asia-south1-docker.pkg.dev/onyx-antler-459216-j6/dotnet-repo/myapp:latest',
-        '--region', 'asia-south1',
-        '--platform', 'managed',
-        '--allow-unauthenticated',
-        '--port', '8080'
-      ]
-
-images:
-  - asia-south1-docker.pkg.dev/onyx-antler-459216-j6/dotnet-repo/myapp:latest
+      - 'run'
+      - 'deploy'
+      - 'baget-service'
+      - '--image'
+      - 'gcr.io/onyx-antler-459216-j6/baget:latest'
+      - '--region'
+      - 'asia-south1'                       # Change to your region if needed
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'          # Remove if you want authentication
+      - '--set-env-vars'
+      - 'ASPNETCORE_ENVIRONMENT=Production,GCS_BUCKET=my-dotnet-packages,BAGET_API_KEY=my-secret-key'
 
 options:
   logging: CLOUD_LOGGING_ONLY
