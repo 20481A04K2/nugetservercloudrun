@@ -1,14 +1,18 @@
-# Use ASP.NET Core runtime base image
+# Use the official BaGet release from NuGet (via Microsoft ASP.NET runtime base image)
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
 
-# Copy published output from builder
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-WORKDIR /src
-COPY . .
-RUN dotnet publish MyApp.csproj -c Release -o /app/publish
+# Download BaGet server release package (replace version if needed)
+RUN apt-get update && apt-get install -y curl unzip && rm -rf /var/lib/apt/lists/*
+RUN curl -L -o baget.zip https://github.com/loic-sharma/BaGet/releases/download/v0.8.1/baget.zip \
+    && unzip baget.zip -d /app \
+    && rm baget.zip
 
-FROM base AS final
-WORKDIR /app
-COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "MyApp.dll"]
+# Expose port 80 for Cloud Run
+EXPOSE 80
+
+# Set environment variables here or pass them via Cloud Run
+ENV ASPNETCORE_URLS=http://+:80
+
+# Run BaGet
+ENTRYPOINT ["dotnet", "BaGet.dll"]
