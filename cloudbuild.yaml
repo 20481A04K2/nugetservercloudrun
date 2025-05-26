@@ -1,5 +1,5 @@
 steps:
-  # Step 1: Restore, Build and Pack the project (creates .nupkg in nupkgs/)
+  # Step 1: Build and Pack (optional if just BaGet, keep if you upload your own .nupkg)
   - name: 'mcr.microsoft.com/dotnet/sdk:7.0'
     id: 'Build and Pack'
     entrypoint: bash
@@ -11,7 +11,7 @@ steps:
         dotnet pack MyApp.csproj -c Release -o nupkgs
         ls -l nupkgs
 
-  # Step 2: Upload the generated .nupkg file(s) to GCS bucket
+  # Step 2: Upload .nupkg to GCS bucket
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'Upload NuGet Package to GCS'
     entrypoint: bash
@@ -34,12 +34,12 @@ steps:
           gcloud artifacts repositories create dotnet-repo \
             --repository-format=docker \
             --location=asia-south1 \
-            --description="Docker repo for .NET app" || true
+            --description="Docker repo for .NET app"
         else
           echo "Artifact Registry repository dotnet-repo already exists, skipping creation."
         fi
 
-  # Step 4: Build BaGet Docker image with filesystem storage
+  # Step 4: Build BaGet Docker image
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Build BaGet Docker Image'
     args:
@@ -55,7 +55,7 @@ steps:
       - 'push'
       - 'gcr.io/onyx-antler-459216-j6/baget:latest'
 
-  # Step 6: Deploy BaGet to Cloud Run (with filesystem storage)
+  # Step 6: Deploy BaGet to Cloud Run with GCS storage
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'Deploy BaGet to Cloud Run'
     entrypoint: 'gcloud'
@@ -71,7 +71,12 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'ASPNETCORE_ENVIRONMENT=Production,BAGET__Storage__Type=FileSystem,BAGET__Storage__Path=/app/packages,BAGET_API_KEY=my-strong-baget-api-key-123'
+      - |
+        ASPNETCORE_ENVIRONMENT=Production,
+        BAGET__Storage__Type=GoogleCloudStorage,
+        BAGET__Storage__GoogleCloudStorage__Bucket=my-dotnet-packages,
+        BAGET_API_KEY=my-strong-baget-api-key-123,
+        ASPNETCORE_URLS=http://+:8080
 
 images:
   - gcr.io/onyx-antler-459216-j6/baget:latest
