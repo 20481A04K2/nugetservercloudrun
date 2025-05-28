@@ -7,7 +7,7 @@ RUN curl -L -o baget.zip https://github.com/loic-sharma/BaGet/releases/download/
     && unzip baget.zip -d /app \
     && rm baget.zip
 
-COPY appsettings.json /app/appsettings.json
+
 
 WORKDIR /app
 
