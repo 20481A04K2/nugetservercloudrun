@@ -11,6 +11,7 @@ steps:
         dotnet pack MyApp.csproj -c Release -o nupkgs
         ls -l nupkgs
 
+
   # Step 2: Upload the generated .nupkg file(s) to GCS bucket
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'Upload NuGet Package to GCS'
