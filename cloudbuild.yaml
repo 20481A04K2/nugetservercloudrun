@@ -71,7 +71,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'ASPNETCORE_ENVIRONMENT=Production,BAGET__Storage__Type=GoogleCloudStorage,BAGET__Storage__GoogleCloudStorage__Bucket=my-dotnet-packages1,BAGET_API_KEY=my-secret-api-key,GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp/key.json,ASPNETCORE_URLS=http://+:${PORT}'
+      - 'ASPNETCORE_ENVIRONMENT=Production,BAGET__Storage__Type=GoogleCloudStorage,BAGET__Storage__GoogleCloudStorage__Bucket=my-dotnet-packages1,BAGET_API_KEY=my-secret-api-key,GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp/key.json,ASPNETCORE_URLS=http://+:$${PORT}'
       - '--update-secrets'
       - '/secrets/gcp/key.json=GCP_SA_KEY:latest'
 
